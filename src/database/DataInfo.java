@@ -1,6 +1,5 @@
 package database;
 
-public interface DataInfo {
-    String lineRepresentation();
+public interface DataInfo <Obj> {
     String getSearchKey();
 }
