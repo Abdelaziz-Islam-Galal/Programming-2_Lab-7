@@ -11,16 +11,17 @@ public abstract class JsonDatabaseManager<Obj extends DataInfo> {
     private String filename;
 
     public JsonDatabaseManager(String filename) throws IllegalArgumentException {
-        if (!Validation.isValidString(filename) || filename.equals("student") || filename.equals("instructor")) {
-            throw new IllegalArgumentException("Invalid filename");
-        } else if (filename.equals("user")) {
+        if (filename.equals("user")) {
             this.filename = "user.json";
         } else if (filename.equals("course")) {
             this.filename = "courses.json";
+        } else{
+            throw new IllegalArgumentException("Invalid filename");
         }
     }
 
     public abstract ArrayList<Obj> recordsFromJson(JsonObject all);
+    public abstract JsonObject recordsToJson(ArrayList<Obj> records);
 
     public void readFromFile() throws IOException {
         try (FileInputStream fis = new FileInputStream(filename);
@@ -73,8 +74,6 @@ public abstract class JsonDatabaseManager<Obj extends DataInfo> {
         }
         System.out.println("RECORD (TO BE DELETED) NOT FOUND!");
     }
-
-    public abstract JsonObject recordsToJson(ArrayList<Obj> records);
 
     public void saveToFile() throws IOException {
         try (FileOutputStream fos = new FileOutputStream(filename);
