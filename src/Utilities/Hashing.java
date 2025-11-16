@@ -1,7 +1,6 @@
-package user_account;
+package Utilities;
 
-import java.util.*;
-import java.security.*;
+import java.security.MessageDigest;
 
 public class Hashing {
     public static String hashPassword(String password) {
