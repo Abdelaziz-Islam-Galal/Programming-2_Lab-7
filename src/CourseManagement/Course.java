@@ -14,21 +14,19 @@ public class Course implements DataInfo {
     private List<Lesson> lessons;
     private List<Student> students;
 
-    public Course(String courseId, String title, String description, String instructorId, Lesson[] lessons) {
+    public Course(String courseId, String title, String description, String instructorId, List<Lesson> lessons) {
         this.lessons = new ArrayList<>();
         students = new ArrayList<>();
         setCourseId(courseId);
         setTitle(title);
         setDescription(description);
         setInstructorId(instructorId);
+        if (lessons != null) {
+            this.lessons.addAll(lessons);
+        }
     }
-    public Course(String courseId, String title, String instructorId, Lesson[] lessons) {
-        this.lessons = new ArrayList<>();
-        students = new ArrayList<>();
-        setCourseId(courseId);
-        setTitle(title);
-        setDescription("");
-        setInstructorId(instructorId);
+    public Course(String courseId, String title, String instructorId, List<Lesson> lessons) {
+        this(courseId, title, "", instructorId, lessons);
     }
 
 
@@ -98,7 +96,7 @@ public class Course implements DataInfo {
         return Collections.unmodifiableList(students);
     }
 
-    public boolean searchStudent(String key){
+    public boolean isStudent(String key){
         for (int i = 0; i < students.size(); i++) {
             if (key != null && key.equals(students.get(i).getSearchKey()))
                 return true;
@@ -106,7 +104,7 @@ public class Course implements DataInfo {
         return false;
     }
 
-    public boolean searchLesson(String key){
+    public boolean isLesson(String key){
         for (int i = 0; i < lessons.size(); i++) {
             if (key != null && key.equals(lessons.get(i).getSearchKey()))
                 return true;
