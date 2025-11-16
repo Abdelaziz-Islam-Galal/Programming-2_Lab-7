@@ -2,7 +2,7 @@ package GUI;
 
 import UserManagement.User;
 import Database.UserService;
-import Utilities.Hashing;
+import Utilities.*;
 
 
 import javax.swing.*;
@@ -57,35 +57,43 @@ public class login extends JFrame {
 
     private void processInput() {
 
-        String input = usernameField.getText();   // email OR id
-        String password = new String(passwordField.getPassword());
-        String selectedRole = roleBox.getSelectedItem().toString();
+        String input = usernameField.getText();
+        if (!Validation.isValidString(input)) {
+            JOptionPane.showMessageDialog(LoginContainer, "Email or ID cannot be empty.");
+            passwordField.setText("");
+            return;
+        }
 
-        if (input.trim().isEmpty() || password.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(LoginContainer, "Please fill all fields");
+        String password = new String(passwordField.getPassword());
+        if (!Validation.isValidString(password)) {
+            JOptionPane.showMessageDialog(LoginContainer, "Password cannot be empty.");
+            passwordField.setText("");
+            return;
+        }
+
+        String selectedRole = roleBox.getSelectedItem().toString();
+        if (!Validation.isValidString(selectedRole)) {
+            JOptionPane.showMessageDialog(LoginContainer, "Please select a role.");
+            passwordField.setText("");
             return;
         }
 
         User loggedUser = checkCredentials(input, password);
-
         if (loggedUser == null) {
-            JOptionPane.showMessageDialog(LoginContainer, "Invalid email/ID or password");
+            JOptionPane.showMessageDialog(LoginContainer, "Invalid email/ID or password.");
             passwordField.setText("");
             return;
         }
 
         if (!loggedUser.getRole().equalsIgnoreCase(selectedRole)) {
-            JOptionPane.showMessageDialog(LoginContainer, "Incorrect role selected");
+            JOptionPane.showMessageDialog(LoginContainer, "Incorrect role selected.");
+            passwordField.setText("");
             return;
         }
 
-        //JOptionPane.showMessageDialog(LoginContainer,
-          //      "Login successful. Welcome " + loggedUser.getName());
-
-
         if (loggedUser.getRole().equalsIgnoreCase("Student")) {
             new stdMainWindow();
-        } else if (loggedUser.getRole().equalsIgnoreCase("Instructor")) {
+        } else {
             new insMainWindow();
         }
 
@@ -115,8 +123,5 @@ public class login extends JFrame {
         }
         return null;
     }
-
-
-
 
 }
