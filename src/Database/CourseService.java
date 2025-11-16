@@ -1,9 +1,6 @@
-package database;
+package Database;
 
 import CourseManagement.Course;
-import Users.Instructor;
-import Users.Student;
-import Users.User;
 
 import javax.json.*;
 import java.util.ArrayList;

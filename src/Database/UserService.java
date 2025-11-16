@@ -1,8 +1,8 @@
-package database;
+package Database;
 
 import javax.json.*;
 import java.util.*;
-import Users.*;
+import UserManagement.*;
 
 public class UserService extends JsonDatabaseManager<User> {
     public UserService(){

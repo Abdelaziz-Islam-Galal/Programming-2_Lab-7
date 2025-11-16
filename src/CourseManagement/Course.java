@@ -1,7 +1,8 @@
 package CourseManagement;
 
-import Users.Student;
-import database.DataInfo;
+import UserManagement.Student;
+import Database.DataInfo;
+import Utilities.Validation;
 
 public class Course implements DataInfo {
 
@@ -13,23 +14,45 @@ public class Course implements DataInfo {
     private Student[] students;
 
     public Course(String courseId, String title, String description, String instructorId) {
-        this.courseId = courseId;
-        this.title = title;
-        this.description = description;
-        this.instructorId = instructorId;
+        setCourseId(courseId);
+        setTitle(title);
+        setDescription(description);
+        setInstructorId(instructorId);
     }
 
     @Override
     public String getSearchKey() { return courseId; }
 
 
-    public void setCourseId(String courseId) { this.courseId = courseId; }
+    public void setCourseId(String courseId) {
+        if(!Validation.isValidString(courseId)) {
+            throw new IllegalArgumentException("Invalid Course ID");
+        }
 
-    public void setTitle(String title) { this.title = title; }
+        this.courseId = courseId;
+    }
 
-    public void setDescription(String description) { this.description = description; }
+    public void setTitle(String title) {
+        if(!Validation.isValidString(title)) {
+            throw new IllegalArgumentException("Invalid Title");
+        }
+        this.title = title;
+    }
 
-    public void setInstructorId(String instructorId) { this.instructorId = instructorId; }
+    public void setDescription(String description) {
+        if(!Validation.isValidString(description)) {
+            this.description = "";
+            return;
+        }
+        this.description = description;
+    }
+
+    public void setInstructorId(String instructorId) {
+        if(!Validation.isValidString(instructorId)) {
+            throw new IllegalArgumentException("Invalid Instructor ID");
+        }
+        this.instructorId = instructorId;
+    }
 
     public String getTitle() { return title; }
 

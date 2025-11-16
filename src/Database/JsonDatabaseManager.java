@@ -1,10 +1,8 @@
-package database;
+package Database;
 
 import javax.json.*;
 import java.util.*;
 import java.io.*;
-
-import utilities.Validation;
 
 public abstract class JsonDatabaseManager<Obj extends DataInfo> {
     private ArrayList<Obj> records = new ArrayList<>();
