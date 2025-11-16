@@ -5,50 +5,50 @@
             "id": "S001",
             "name": "Ahmed Mohamed",
             "email": "ahmed@student.com",
-            "password": "8bbfa6868caa6cabcb87a7a745cd205a574a56dd9ecb1b008377e8df70015f8f",
+            "password": "c0ea697d7e8e34c6806ed0bf70eea371393d3315a32c6cd734aa133f8e9c4207",
             "role": "Student"
         },
         {
             "id": "S002",
             "name": "Sara Ali",
             "email": "sara@student.com",
-            "password": "691a4346515b271ec2292b9a6810f7c0062a4639b0619a4662d1861d4470c426",
+            "password": "a898cdcfe1be49e02b723ead7f8e84e4915ba9e0af02def42cd7565dacf93a81",
             "role": "Student"
         },
         {
             "id": "I001",
             "name": "Dr. Hassan",
             "email": "hassan@instructor.com",
-            "password": "3dcc798f9e64598cec4f9a7640ff4a11237590c922f7cfb80b6cb0b3d4f75ced",
+            "password": "3a8f6b2d70b34370637e84840d2b3a1ae4f240a30315f7a4dd7293f184fe6c74",
             "role": "Instructor"
         },
         {
             "id": "1234",
             "name": "user1",
             "email": "abc12@hj.com",
-            "password": "8bfd946784a4f0d377628af1d004e07eb8208a980acb040194b09e8142cccc7c",
+            "password": "f282df8a7483e87dcf412f181a1395b86bc3e4f2172e8c58e094a58603db9f55",
             "role": "Student"
         },
         {
             "id": "3468",
             "name": "student1",
             "email": "student1@skillforge.com",
-            "password": "98f498e6cff18a9e470321448ebc7865b560ed4df2babf604ef9130aaf5acd52",
+            "password": "c2e2d6a518648f23d6ccf339ce392bc5163fa47caa4c1733685cd548ef062666",
             "role": "Student"
         },
         {
             "id": "1234456",
             "name": "isthat true?",
             "email": "debug@debug.com",
-            "password": "bb9df0f6a301d65cb7d508747209a565d27115dc67cb16d6615203a93ddc1b33",
+            "password": "6afc0da81d4faccefecdd614597f406a18ac115d9d8ee6dd6046812fef166258",
             "role": "Student"
         },
         {
             "id": "9999",
-            "name": "Dr. z3wf",
-            "email": "dueg@wdniw.com",
-            "password": "c5d3d00592c36d9b3bb330ef5378fa4cf6eae97c6a88d2490bcff4808436aa10",
-            "role": "Instructor"
+            "name": "fiqnw",
+            "email": "wfw@wfuh.com",
+            "password": "888df25ae35772424a560c7152a1de794440e0ea5cfee62828333a456a506e05",
+            "role": "Student"
         }
     ]
 }

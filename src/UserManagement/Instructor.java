@@ -12,8 +12,7 @@ import java.util.List;
 
 public class Instructor extends User {
     public Instructor(String name, String ID, String email, String password){
-        String passwordHash = Hashing.hashPassword(password);
-        super(name, ID, email, passwordHash);
+        super(name, ID, email, password);
         this.role = "Instructor";
     }
 
