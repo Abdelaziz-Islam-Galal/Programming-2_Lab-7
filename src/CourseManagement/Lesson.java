@@ -2,26 +2,26 @@ package CourseManagement;
 
 import Database.DataInfo;
 import Utilities.Validation;
+import java.util.*;
 
 public class Lesson implements DataInfo {
 
     private String lessonID;
     private String title;
     private String content;
-    private String[] resources;
+    private List<String> resources;
 
-    public Lesson(String lessonID, String title, String content, String[] resources) {
-        this.lessonID = lessonID;
-        this.title = title;
-        this.content = content;
-        this.resources = resources;
+    public Lesson(String lessonID, String title, String content, List<String> resources) {
+        this.resources = new ArrayList<>();
+        setContent(content);
+        setLessonID(lessonID);
+        setTitle(title);
+        if(resources != null)
+            this.resources.addAll(resources);
     }
 
     public Lesson(String lessonID, String title, String content) {
-        this.lessonID = lessonID;
-        this.title = title;
-        this.content = content;
-        this.resources = new String[0];
+        this(lessonID, title, content, null);
     }
 
     @Override
@@ -51,13 +51,12 @@ public class Lesson implements DataInfo {
         this.content = content;
     }
 
-    public void setResources(String[] resources) {
-        if(resources == null) {
-            this.resources = new String[0];
+    public void addResource(String resource) {
+        if(resources == null) {;
             return;
         }
 
-        this.resources = resources;
+        this.resources.add(resource);
     }
 
 //    public String getLessonID() {
@@ -72,8 +71,8 @@ public class Lesson implements DataInfo {
         return content;
     }
 
-    public String[] getResources() {
-        return resources;
+    public List<String> getResources() {
+        return Collections.unmodifiableList(resources);
     }
 
 
