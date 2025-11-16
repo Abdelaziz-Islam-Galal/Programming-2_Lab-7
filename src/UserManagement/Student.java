@@ -12,8 +12,7 @@ public class Student extends User{
     // 2l5olasa: Map<course id, Map<lesson id, is lesson completed?>>
 
     public Student(String name, String ID, String email, String password){
-        String passwordHash = Hashing.hashPassword(password);
-        super(name, ID, email, passwordHash);
+        super(name, ID, email, password);
         this.role = "Student";
     }
 

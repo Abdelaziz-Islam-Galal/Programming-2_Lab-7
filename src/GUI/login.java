@@ -108,6 +108,7 @@ public class login extends JFrame {
 
         String hashedInput = Hashing.hashPassword(plainPassword);
 
+
         for (User user : allUsers) {
 //            System.out.println("enterd");
 
@@ -116,8 +117,10 @@ public class login extends JFrame {
 
             if (matchesEmail || matchesId) {
 //                System.out.println("enterd");
+                System.out.println(plainPassword);
                 System.out.println(hashedInput);
-                if (user.getPasswordHash().equals(hashedInput)) {
+                System.out.println(user.getPasswordHash());
+                if (hashedInput.equals(user.getPasswordHash())) {
 //                    System.out.println("here?!");
                     return user;
                 } else {
