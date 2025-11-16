@@ -3,11 +3,12 @@ package UserManagement;
 import CourseManagement.Course;
 import CourseManagement.Lesson;
 import Database.CourseService;
+
+
 import java.util.*;
 
 public class Student extends User{
     private Map<String, Map<String, Boolean>> progress = new HashMap<>();
-    // 2l5olasa: Map<course id, Map<lesson id, is lesson completed?>>
 
     public Student(String name, String ID, String email, String password){
         super(name, ID, email, password);
@@ -59,9 +60,7 @@ public class Student extends User{
     public boolean isLessonCompleted(String courseID, String lessonID) {
         if (progress.containsKey(courseID)) {
             Map<String, Boolean> lessonProgress = progress.get(courseID);
-            if(lessonProgress.containsKey(lessonID)) {
-                return true;
-            }
+            return lessonProgress.getOrDefault(lessonID, false);
         }
         return false;
     }
@@ -99,5 +98,23 @@ public class Student extends User{
         return completedLessons;
     }
 
+    public List<Course> getEnrolledCourses(CourseService courseService) {
+        List<Course> enrolledCourses = new ArrayList<>();
+        for (String courseID : progress.keySet()) {
+            Course course = courseService.getRecord(courseID);
+            if (course != null) {
+                enrolledCourses.add(course);
+            }
+        }
+        return enrolledCourses;
+    }
 
+
+    public Map<String, Map<String, Boolean>> getProgress() {
+        return progress;
+    }
+
+    public void setProgress(Map<String, Map<String, Boolean>> progress) {
+        this.progress = progress;
+    }
 }

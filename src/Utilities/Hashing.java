@@ -46,7 +46,9 @@ public class Hashing {
         // trying a pass hash
         String password = "hello";
         String hash = hashPassword(password);
+        String hash2 = hashPassword("hello");
         System.out.println("Hash: " + hash);
+        System.out.println("Hash2: " + hash2);
         // known hash-256 for hellow: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
 
         // testing hex conversions is correct
