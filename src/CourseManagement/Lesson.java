@@ -1,8 +1,9 @@
 package CourseManagement;
 
+import Database.DataInfo;
 import Utilities.Validation;
 
-public class Lesson {
+public class Lesson implements DataInfo {
 
     private String lessonID;
     private String title;
@@ -22,6 +23,9 @@ public class Lesson {
         this.content = content;
         this.resources = new String[0];
     }
+
+    @Override
+    public String getSearchKey() { return lessonID; }
 
     public void setLessonID(String lessonID) {
         if(!Validation.isValidString(lessonID)) {
@@ -56,9 +60,9 @@ public class Lesson {
         this.resources = resources;
     }
 
-    public String getLessonID() {
-        return lessonID;
-    }
+//    public String getLessonID() {
+//        return lessonID;
+//    }
 
     public String getTitle() {
         return title;
