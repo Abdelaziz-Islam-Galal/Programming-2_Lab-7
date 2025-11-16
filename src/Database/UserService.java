@@ -25,14 +25,36 @@ public class UserService extends JsonDatabaseManager<User> {
     private User retrieveUser(JsonValue value){
         User user;
         JsonObject userObj = (JsonObject) value;
+
         if(userObj.getString("role").equals("Student")){
-            user = new Student(
+            Student student = new Student(
                     userObj.getString("name"),
                     userObj.getString("id"),
                     userObj.getString("email"),
                     userObj.getString("password")
             );
-        } else{
+
+
+            if (userObj.containsKey("progress")) {
+                JsonObject progressObj = userObj.getJsonObject("progress");
+                Map<String, Map<String, Boolean>> progress = new HashMap<>();
+
+                for (String courseId : progressObj.keySet()) {
+                    JsonObject lessonProgressObj = progressObj.getJsonObject(courseId);
+                    Map<String, Boolean> lessonProgress = new HashMap<>();
+
+                    for (String lessonId : lessonProgressObj.keySet()) {
+                        lessonProgress.put(lessonId, lessonProgressObj.getBoolean(lessonId));
+                    }
+
+                    progress.put(courseId, lessonProgress);
+                }
+
+                student.setProgress(progress);
+            }
+
+            user = student;
+        } else {
             user = new Instructor(
                     userObj.getString("name"),
                     userObj.getString("id"),
@@ -48,13 +70,33 @@ public class UserService extends JsonDatabaseManager<User> {
         JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 
         for (User user : users) {
-            arrayBuilder.add(Json.createObjectBuilder()
+            JsonObjectBuilder userBuilder = Json.createObjectBuilder()
                     .add("id", user.getSearchKey())
                     .add("name", user.getName())
                     .add("email", user.getEmail())
                     .add("password", user.getPasswordHash())
-                    .add("role", user.getRole())
-                    .build());
+                    .add("role", user.getRole());
+
+
+            if (user instanceof Student) {
+                Student student = (Student) user;
+                JsonObjectBuilder progressBuilder = Json.createObjectBuilder();
+
+                Map<String, Map<String, Boolean>> progress = student.getProgress();
+                for (Map.Entry<String, Map<String, Boolean>> courseEntry : progress.entrySet()) {
+                    JsonObjectBuilder lessonProgressBuilder = Json.createObjectBuilder();
+
+                    for (Map.Entry<String, Boolean> lessonEntry : courseEntry.getValue().entrySet()) {
+                        lessonProgressBuilder.add(lessonEntry.getKey(), lessonEntry.getValue());
+                    }
+
+                    progressBuilder.add(courseEntry.getKey(), lessonProgressBuilder.build());
+                }
+
+                userBuilder.add("progress", progressBuilder.build());
+            }
+
+            arrayBuilder.add(userBuilder.build());
         }
 
         return Json.createObjectBuilder()

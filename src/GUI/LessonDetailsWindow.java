@@ -2,11 +2,12 @@ package GUI;
 
 import CourseManagement.Course;
 import CourseManagement.Lesson;
+import Database.CourseService;
+import Database.UserService;
+import UserManagement.Student;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.HashMap;
-import java.util.HashSet;
 
 public class LessonDetailsWindow extends JDialog {
     private JPanel mainPanel;
@@ -23,14 +24,21 @@ public class LessonDetailsWindow extends JDialog {
 
     private Lesson lesson;
     private Course course;
-    private HashMap<String, HashSet<String>> lessonProgress;
+    private Student student;
+    private CourseService courseService;
+    private UserService userService;
+    private CourseDetailsWindow parentWindow;
 
-    public LessonDetailsWindow(JFrame parent, Lesson lesson, Course course, HashMap<String, HashSet<String>> lessonProgress) {
+    public LessonDetailsWindow(CourseDetailsWindow parent, Lesson lesson, Course course,
+                               Student student, CourseService courseService, UserService userService) {
         super(parent, "Lesson: " + lesson.getTitle(), true);
 
+        this.parentWindow = parent;
         this.lesson = lesson;
         this.course = course;
-        this.lessonProgress = lessonProgress;
+        this.student = student;
+        this.courseService = courseService;
+        this.userService = userService;
 
         setSize(700, 500);
         setLocationRelativeTo(parent);
@@ -48,12 +56,7 @@ public class LessonDetailsWindow extends JDialog {
         idLabel.setText("Lesson ID: " + lesson.getSearchKey());
 
 
-        HashSet<String> completed = lessonProgress.getOrDefault(course.getSearchKey(), new HashSet<>());
-        boolean isCompleted = completed.contains(lesson.getSearchKey());
-        String status = isCompleted ? "✓ Completed" : "Not Completed";
-
-        statusLabel.setText("Status: " + status);
-        statusLabel.setForeground(isCompleted ? new Color(0, 128, 0) : Color.RED);
+        updateStatusLabel();
 
 
         contentArea.setText(lesson.getContent());
@@ -72,8 +75,21 @@ public class LessonDetailsWindow extends JDialog {
         }
     }
 
+    private void updateStatusLabel() {
+        boolean isCompleted = student.isLessonCompleted(course.getSearchKey(), lesson.getSearchKey());
+        String status = isCompleted ? "✓ Completed" : "Not Completed";
+        statusLabel.setText("Status: " + status);
+        statusLabel.setForeground(isCompleted ? new Color(0, 128, 0) : Color.RED);
+    }
+
     private void setupListeners() {
-        closeButton.addActionListener(e -> dispose());
+        closeButton.addActionListener(e -> {
+
+            if (parentWindow != null) {
+                parentWindow.refreshDisplay();
+            }
+            dispose();
+        });
     }
 
     public JPanel getMainPanel() {

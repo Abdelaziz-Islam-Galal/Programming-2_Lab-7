@@ -2,12 +2,13 @@ package GUI;
 
 import CourseManagement.Course;
 import CourseManagement.Lesson;
+import Database.CourseService;
+import Database.UserService;
 import UserManagement.Student;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 
 public class CourseDetailsWindow extends JFrame {
     private JPanel mainPanel;
@@ -25,12 +26,14 @@ public class CourseDetailsWindow extends JFrame {
 
     private Course course;
     private Student student;
-    private HashMap<String, HashSet<String>> lessonProgress;
+    private CourseService courseService;
+    private UserService userService;
 
-    public CourseDetailsWindow(Course course, Student student, HashMap<String, HashSet<String>> lessonProgress) {
+    public CourseDetailsWindow(Course course, Student student, CourseService courseService, UserService userService) {
         this.course = course;
         this.student = student;
-        this.lessonProgress = lessonProgress;
+        this.courseService = courseService;
+        this.userService = userService;
 
         setTitle("Course: " + course.getTitle());
         setSize(800, 600);
@@ -66,10 +69,14 @@ public class CourseDetailsWindow extends JFrame {
         if (course.getLessons().isEmpty()) {
             lessonsModel.addElement("No lessons available yet.");
         } else {
-            HashSet<String> completed = lessonProgress.getOrDefault(course.getSearchKey(), new HashSet<>());
-            for (int i = 0; i < course.getLessons().size(); i++) {
-                Lesson lesson = course.getLessons().get(i);
-                String status = completed.contains(lesson.getSearchKey()) ? " ✓ [Completed]" : "";
+
+            List<Lesson> allLessons = student.getAllLessons(courseService, course.getSearchKey());
+
+            for (int i = 0; i < allLessons.size(); i++) {
+                Lesson lesson = allLessons.get(i);
+
+                boolean isCompleted = student.isLessonCompleted(course.getSearchKey(), lesson.getSearchKey());
+                String status = isCompleted ? " ✓ [Completed]" : "";
                 lessonsModel.addElement((i + 1) + ". " + lesson.getTitle() + status);
             }
         }
@@ -77,17 +84,25 @@ public class CourseDetailsWindow extends JFrame {
 
     private void updateProgressLabel() {
         int totalLessons = course.getLessons().size();
-        int completedLessons = lessonProgress.getOrDefault(course.getSearchKey(), new HashSet<>()).size();
-        double progressPercent = totalLessons > 0 ? (completedLessons * 100.0 / totalLessons) : 0;
+
+
+        List<Lesson> completedLessons = student.getCompletedLessons(courseService, course.getSearchKey());
+        int completedCount = completedLessons.size();
+
+        double progressPercent = totalLessons > 0 ? (completedCount * 100.0 / totalLessons) : 0;
 
         progressLabel.setText(String.format("Progress: %d/%d lessons completed (%.1f%%)",
-                completedLessons, totalLessons, progressPercent));
+                completedCount, totalLessons, progressPercent));
     }
 
     private void setupListeners() {
         viewLessonButton.addActionListener(e -> onViewLessonClicked());
         markCompleteButton.addActionListener(e -> onMarkCompleteClicked());
-        closeButton.addActionListener(e -> dispose());
+        closeButton.addActionListener(e -> {
+
+            userService.updateRecord(student.getSearchKey(), student);
+            dispose();
+        });
     }
 
     private void onViewLessonClicked() {
@@ -95,8 +110,8 @@ public class CourseDetailsWindow extends JFrame {
 
         if (selectedIndex >= 0 && selectedIndex < course.getLessons().size()) {
             Lesson selectedLesson = course.getLessons().get(selectedIndex);
-            // Use the new separate LessonDetailsWindow
-            new LessonDetailsWindow(this, selectedLesson, course, lessonProgress);
+
+            new LessonDetailsWindow(this, selectedLesson, course, student, courseService, userService);
         } else {
             JOptionPane.showMessageDialog(this,
                     "Please select a lesson to view.",
@@ -124,22 +139,39 @@ public class CourseDetailsWindow extends JFrame {
     }
 
     private void markLessonComplete(Lesson lesson) {
-        HashSet<String> completedLessons = lessonProgress.getOrDefault(course.getSearchKey(), new HashSet<>());
 
-        if (completedLessons.contains(lesson.getSearchKey())) {
+        boolean isCompleted = student.isLessonCompleted(course.getSearchKey(), lesson.getSearchKey());
+
+        if (isCompleted) {
             JOptionPane.showMessageDialog(this,
                     "This lesson is already marked as completed!",
                     "Already Completed",
                     JOptionPane.INFORMATION_MESSAGE);
         } else {
-            completedLessons.add(lesson.getSearchKey());
-            lessonProgress.put(course.getSearchKey(), completedLessons);
+            try {
+                // Use Student's method to mark lesson as completed
+                student.markLessonCompleted(course.getSearchKey(), lesson.getSearchKey());
 
-            JOptionPane.showMessageDialog(this,
-                    "Lesson '" + lesson.getTitle() + "' marked as completed!",
-                    "Progress Updated",
-                    JOptionPane.INFORMATION_MESSAGE);
+                // Update user in database to persist progress
+                userService.updateRecord(student.getSearchKey(), student);
+
+                JOptionPane.showMessageDialog(this,
+                        "Lesson '" + lesson.getTitle() + "' marked as completed!",
+                        "Progress Updated",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } catch (IllegalArgumentException e) {
+                JOptionPane.showMessageDialog(this,
+                        "Error marking lesson as completed: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         }
+    }
+
+
+    public void refreshDisplay() {
+        updateLessonsList();
+        updateProgressLabel();
     }
 
     public JPanel getMainPanel() {
