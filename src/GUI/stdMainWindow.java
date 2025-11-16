@@ -9,8 +9,7 @@ import UserManagement.Student;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 
 public class stdMainWindow extends JFrame {
     private JPanel mainPanel;
@@ -18,6 +17,7 @@ public class stdMainWindow extends JFrame {
     private JList<String> enrolledCoursesList;
     private JButton enrollButton;
     private JButton openCourseButton;
+    private JButton dropCourseButton;
     private JButton refreshButton;
     private JButton logoutButton;
     private JScrollPane availableCoursesScroll;
@@ -35,15 +35,11 @@ public class stdMainWindow extends JFrame {
     private Student currentStudent;
 
     private ArrayList<Course> allCourses;
-    private ArrayList<Course> studentEnrolledCourses;
-
-    private HashMap<String, HashSet<String>> lessonProgress;
 
     public stdMainWindow(Student student) {
         this.currentStudent = student;
         this.courseService = new CourseService();
         this.userService = new UserService();
-        this.lessonProgress = new HashMap<>();
 
         userLabel.setText("Welcome, " + student.getName() + " (ID: " + student.getSearchKey() + ")");
 
@@ -57,6 +53,7 @@ public class stdMainWindow extends JFrame {
 
         enrollButton.addActionListener(e -> onEnrollClicked());
         openCourseButton.addActionListener(e -> onOpenCourseClicked());
+        dropCourseButton.addActionListener(e -> onDropCourseClicked());
         refreshButton.addActionListener(e -> loadCourses());
         logoutButton.addActionListener(e -> onLogout());
 
@@ -65,26 +62,41 @@ public class stdMainWindow extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setContentPane(mainPanel);
+
+
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                userService.updateRecord(currentStudent.getSearchKey(), currentStudent);
+            }
+        });
+
         setVisible(true);
     }
 
     private void loadCourses() {
         allCourses = courseService.returnAllRecords();
-        studentEnrolledCourses = new ArrayList<>();
 
         availableCoursesModel.clear();
         enrolledCoursesModel.clear();
 
+
+        List<Course> enrolledCourses = currentStudent.getEnrolledCourses(courseService);
+
         for (Course course : allCourses) {
             String courseDisplay = course.getTitle() + " (ID: " + course.getSearchKey() + ")";
 
-            if (course.searchStudent(currentStudent.getSearchKey()) != null) {
-                enrolledCoursesModel.addElement(courseDisplay);
-                studentEnrolledCourses.add(course);
 
-                if (!lessonProgress.containsKey(course.getSearchKey())) {
-                    lessonProgress.put(course.getSearchKey(), new HashSet<>());
+            boolean isEnrolled = false;
+            for (Course enrolledCourse : enrolledCourses) {
+                if (enrolledCourse.getSearchKey().equals(course.getSearchKey())) {
+                    isEnrolled = true;
+                    break;
                 }
+            }
+
+            if (isEnrolled) {
+                enrolledCoursesModel.addElement(courseDisplay);
             } else {
                 availableCoursesModel.addElement(courseDisplay);
             }
@@ -138,15 +150,29 @@ public class stdMainWindow extends JFrame {
             return;
         }
 
-        course.addStudent(currentStudent);
-        courseService.updateRecord(courseId, course);
+        try {
 
-        JOptionPane.showMessageDialog(this,
-                "Successfully enrolled in: " + course.getTitle(),
-                "Enrollment Success",
-                JOptionPane.INFORMATION_MESSAGE);
+            currentStudent.enrollInCourse(courseService, courseId, currentStudent);
 
-        loadCourses();
+
+            course.addStudent(currentStudent);
+            courseService.updateRecord(courseId, course);
+
+
+            userService.updateRecord(currentStudent.getSearchKey(), currentStudent);
+
+            JOptionPane.showMessageDialog(this,
+                    "Successfully enrolled in: " + course.getTitle(),
+                    "Enrollment Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+            loadCourses();
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error enrolling in course: " + e.getMessage(),
+                    "Enrollment Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void onOpenCourseClicked() {
@@ -173,7 +199,7 @@ public class stdMainWindow extends JFrame {
         }
 
 
-        new CourseDetailsWindow(course, currentStudent, lessonProgress);
+        new CourseDetailsWindow(course, currentStudent, courseService, userService);
     }
 
     private void onLogout() {
@@ -183,8 +209,69 @@ public class stdMainWindow extends JFrame {
                 JOptionPane.YES_NO_OPTION);
 
         if (choice == JOptionPane.YES_OPTION) {
+
+            userService.updateRecord(currentStudent.getSearchKey(), currentStudent);
+
             dispose();
             new login();
+        }
+    }
+
+    private void onDropCourseClicked() {
+        String selectedCourse = enrolledCoursesList.getSelectedValue();
+
+        if (selectedCourse == null || selectedCourse.equals("No enrolled courses yet.")) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select an enrolled course to drop.",
+                    "No Selection",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String courseId = extractCourseId(selectedCourse);
+
+        Course course = courseService.getRecord(courseId);
+
+        if (course == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Course not found!",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int choice = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to drop:\n" + course.getTitle() + "?\n\nAll progress in this course will be lost.",
+                "Confirm Drop Course",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+
+        if (choice != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        try {
+
+            currentStudent.dropCourse(courseService, courseId, currentStudent);
+
+
+            course.removeStudent(currentStudent.getSearchKey());
+            courseService.updateRecord(courseId, course);
+
+
+            userService.updateRecord(currentStudent.getSearchKey(), currentStudent);
+
+            JOptionPane.showMessageDialog(this,
+                    "Successfully dropped: " + course.getTitle(),
+                    "Course Dropped",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+            loadCourses();
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error dropping course: " + e.getMessage(),
+                    "Drop Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
