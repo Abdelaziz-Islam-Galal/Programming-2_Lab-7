@@ -35,7 +35,7 @@ public abstract class User implements DataInfo {
     }
 
     public void setID(String ID){
-        if(Validation.isValidString(ID)){
+        if(!Validation.isValidString(ID)){
             throw new IllegalArgumentException("Invalid ID format.");
         }
 

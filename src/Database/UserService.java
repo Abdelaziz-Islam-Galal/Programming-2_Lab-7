@@ -61,4 +61,6 @@ public class UserService extends JsonDatabaseManager<User> {
                 .add("users", arrayBuilder.build())
                 .build();
     }
+
+    // remeber to add: update student
 }
