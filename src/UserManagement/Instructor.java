@@ -45,6 +45,42 @@ public class Instructor extends User {
         courseService.updateRecord(key, existingCourse);
     }
 
+    public void editLesson(CourseService courseService, UserService userService, String courseId, String oldLessonID, String newLessonID, String title, String content, List<String> resources){
+        Course existingCourse = courseService.getRecord(courseId);
+        String key = existingCourse.getSearchKey();
+
+
+        boolean lessonIdChanged = !oldLessonID.equals(newLessonID) && Validation.isValidString(newLessonID);
+
+
+        Lesson updatedLesson = new Lesson(
+                Validation.isValidString(newLessonID) ? newLessonID : oldLessonID,
+                title,
+                content,
+                resources
+        );
+
+
+        existingCourse.editLesson(oldLessonID, updatedLesson);
+
+
+        if (lessonIdChanged) {
+            List<User> allUsers = userService.returnAllRecords();
+            for (User user : allUsers) {
+                if (user instanceof Student) {
+                    Student student = (Student) user;
+
+                    student.updateLessonIdInProgress(courseId, oldLessonID, newLessonID);
+
+                    userService.updateRecord(student.getSearchKey(), student);
+                }
+            }
+        }
+
+        courseService.updateRecord(key, existingCourse);
+    }
+
+
     public void editLesson(CourseService courseService, String courseId, String lessonID, String title, String content, List<String> resources){
         Course existingCourse = courseService.getRecord(courseId);
         String key = existingCourse.getSearchKey();
@@ -62,15 +98,12 @@ public class Instructor extends User {
         courseService.updateRecord(key, existingCourse);
     }
 
-
-
     public List<Student> enrolledStudents(CourseService courseService, UserService userService, String courseId){
         Course existingCourse = courseService.getRecord(courseId);
 
         if (existingCourse == null) {
             return Collections.emptyList();
         }
-
 
         List<Student> enrolledStudents = new ArrayList<>();
         List<User> allUsers = userService.returnAllRecords();
@@ -85,18 +118,14 @@ public class Instructor extends User {
             }
         }
 
-
         existingCourse.getStudents().clear();
-
 
         for (Student student : enrolledStudents) {
             existingCourse.addStudent(student);
         }
-
 
         courseService.updateRecord(courseId, existingCourse);
 
         return Collections.unmodifiableList(enrolledStudents);
     }
 }
-
