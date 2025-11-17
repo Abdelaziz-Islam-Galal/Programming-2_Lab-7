@@ -17,9 +17,6 @@ public class Main {
             UserService userService = new UserService();
 
             if (userService.numberOfRecords() == 0) {
-                System.out.println("No users found. Creating sample accounts...\n");
-
-
 
             } else {
                 System.out.println("Found " + userService.numberOfRecords() + " existing users\n");

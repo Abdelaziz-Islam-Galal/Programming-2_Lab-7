@@ -53,7 +53,7 @@ public class stdMainWindow extends JFrame {
         enrollButton.addActionListener(e -> onEnrollClicked());
         openCourseButton.addActionListener(e -> onOpenCourseClicked());
         dropCourseButton.addActionListener(e -> onDropCourseClicked());
-        refreshButton.addActionListener(e -> loadCourses());
+        refreshButton.addActionListener(e -> onRefreshClicked());
         logoutButton.addActionListener(e -> onLogout());
 
         setTitle("Student Dashboard - " + student.getName());
@@ -73,6 +73,12 @@ public class stdMainWindow extends JFrame {
     }
 
     private void loadCourses() {
+        // Reload the current student from the database to get the latest data
+        Student freshStudent = (Student) userService.getRecord(currentStudent.getSearchKey());
+        if (freshStudent != null) {
+            currentStudent = freshStudent;
+        }
+
         allCourses = courseService.returnAllRecords();
 
         availableCoursesModel.clear();
@@ -104,6 +110,24 @@ public class stdMainWindow extends JFrame {
         if (enrolledCoursesModel.isEmpty()) {
             enrolledCoursesModel.addElement("No enrolled courses yet.");
         }
+    }
+
+    private void onRefreshClicked() {
+        // Save current data first
+        saveAllData();
+
+        // Reload everything from the database
+        courseService = new CourseService();
+        userService = new UserService();
+
+        // Reload courses
+        loadCourses();
+
+        // Show confirmation message
+        JOptionPane.showMessageDialog(this,
+                "Course lists have been refreshed successfully!",
+                "Refresh Complete",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void onEnrollClicked() {
@@ -147,14 +171,14 @@ public class stdMainWindow extends JFrame {
         }
 
         try {
-
+            // Enroll the student in the course
             currentStudent.enrollInCourse(courseService, courseId, currentStudent);
 
-
+            // Add student to course
             course.addStudent(currentStudent);
             courseService.updateRecord(courseId, course);
 
-
+            // Update user in database
             userService.updateRecord(currentStudent.getSearchKey(), currentStudent);
 
             JOptionPane.showMessageDialog(this,
@@ -205,13 +229,13 @@ public class stdMainWindow extends JFrame {
                 JOptionPane.QUESTION_MESSAGE);
 
         if (choice == JOptionPane.YES_OPTION) {
-
+            // Save all data before logging out
             saveAllData();
 
-
+            // Close this window
             dispose();
 
-
+            // Open login window
             new login();
         }
     }
@@ -250,14 +274,14 @@ public class stdMainWindow extends JFrame {
         }
 
         try {
-
+            // Drop the course
             currentStudent.dropCourse(courseService, courseId, currentStudent);
 
-
+            // Remove student from course
             course.removeStudent(currentStudent.getSearchKey());
             courseService.updateRecord(courseId, course);
 
-
+            // Update user in database
             userService.updateRecord(currentStudent.getSearchKey(), currentStudent);
 
             JOptionPane.showMessageDialog(this,
@@ -281,13 +305,13 @@ public class stdMainWindow extends JFrame {
     }
 
     private void saveAllData() {
-
+        // Update current student in database
         userService.updateRecord(currentStudent.getSearchKey(), currentStudent);
 
-
+        // Save courses to file
         courseService.saveToFile();
 
-
+        // Save users to file
         userService.saveToFile();
     }
 

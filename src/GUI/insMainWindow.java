@@ -75,12 +75,10 @@ public class insMainWindow extends JFrame {
         setSize(950, 750);
         setLocationRelativeTo(null);
 
-
         userLabel.setText("Welcome, " + instructor.getName() + " (ID: " + instructor.getSearchKey() + ")");
 
         setListeners();
         updateEnrolledStudentsTable();
-
 
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
@@ -96,12 +94,10 @@ public class insMainWindow extends JFrame {
 
         logoutButton.addActionListener(e -> onLogout());
 
-
         refreshTableButton.addActionListener(e -> {
             updateEnrolledStudentsTable();
             JOptionPane.showMessageDialog(this, "Student list refreshed successfully!", "Refreshed", JOptionPane.INFORMATION_MESSAGE);
         });
-
 
         createButton.addActionListener(e -> {
             try {
@@ -122,7 +118,6 @@ public class insMainWindow extends JFrame {
             }
         });
 
-
         searchButtonC.addActionListener(e -> {
             String id = CourseIDField.getText();
             Course course = courseService.getRecord(id);
@@ -142,7 +137,6 @@ public class insMainWindow extends JFrame {
             DescriptionEdited.setText(course.getDescription());
         });
 
-
         editButtonCourse.addActionListener(e -> {
             String oldId = CourseIDField.getText();
             String title = titleCourseEdited.getText();
@@ -160,7 +154,6 @@ public class insMainWindow extends JFrame {
                 JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
-
 
         DeleteButtonC.addActionListener(e -> {
             String id = DeletedCourseID.getText();
@@ -190,7 +183,6 @@ public class insMainWindow extends JFrame {
             }
         });
 
-
         addButtonLesson.addActionListener(e -> {
             String courseId = CourseID_AddLesson.getText();
             String lessonId = AddLessonID.getText();
@@ -219,7 +211,6 @@ public class insMainWindow extends JFrame {
                 JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
-
 
         searchButtonL.addActionListener(e -> {
             String courseId = CourseLessonEdit.getText();
@@ -256,6 +247,7 @@ public class insMainWindow extends JFrame {
         EditButtonL.addActionListener(e -> {
             String courseId = CourseLessonEdit.getText();
             String oldLessonId = LessonIDSe.getText();
+            String newLessonId = IDLessonEdited.getText().trim();
             String title = titleLessonEdited.getText();
             String content = ContentEdited.getText();
 
@@ -272,13 +264,21 @@ public class insMainWindow extends JFrame {
             }
 
             try {
-                currentInstructor.editLesson(courseService, courseId, oldLessonId, title, content, lesson.getResources());
-                JOptionPane.showMessageDialog(this, "Lesson updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+
+                currentInstructor.editLesson(courseService, userService, courseId, oldLessonId, newLessonId, title, content, lesson.getResources());
+
+
+                if (!oldLessonId.equals(newLessonId)) {
+                    LessonIDSe.setText(newLessonId);
+                }
+
+                JOptionPane.showMessageDialog(this, "Lesson updated successfully!" +
+                                (!oldLessonId.equals(newLessonId) ? "\nAll enrolled students' progress has been updated." : ""),
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
-
 
         addResources.addActionListener(e -> {
             String courseId = CourseLessonEdit.getText();
@@ -309,7 +309,6 @@ public class insMainWindow extends JFrame {
             JOptionPane.showMessageDialog(this, "Resource added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
         });
 
-
         deleteResouces.addActionListener(e -> {
             String courseId = CourseLessonEdit.getText();
             String lessonId = LessonIDSe.getText();
@@ -337,7 +336,6 @@ public class insMainWindow extends JFrame {
             ResourcesComboBox.removeItem(selectedResource);
             JOptionPane.showMessageDialog(this, "Resource removed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
         });
-
 
         deleteButton.addActionListener(e -> {
             String courseId = CourseID_lessonDelete.getText();
@@ -410,7 +408,6 @@ public class insMainWindow extends JFrame {
 
         table1.setModel(model);
 
-
         if (table1.getColumnModel().getColumnCount() > 0) {
             table1.getColumnModel().getColumn(0).setPreferredWidth(80);  // Course ID
             table1.getColumnModel().getColumn(1).setPreferredWidth(150); // Course Title
@@ -438,9 +435,7 @@ public class insMainWindow extends JFrame {
     }
 
     private void saveAllData() {
-
         courseService.saveToFile();
-
         userService.saveToFile();
     }
 }
