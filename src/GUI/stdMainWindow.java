@@ -5,7 +5,6 @@ import CourseManagement.Lesson;
 import Database.CourseService;
 import Database.UserService;
 import UserManagement.Student;
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -54,7 +53,7 @@ public class stdMainWindow extends JFrame {
         enrollButton.addActionListener(e -> onEnrollClicked());
         openCourseButton.addActionListener(e -> onOpenCourseClicked());
         dropCourseButton.addActionListener(e -> onDropCourseClicked());
-        refreshButton.addActionListener(e -> loadCourses());
+        refreshButton.addActionListener(e -> onRefreshClicked());
         logoutButton.addActionListener(e -> onLogout());
 
         setTitle("Student Dashboard - " + student.getName());
@@ -63,11 +62,10 @@ public class stdMainWindow extends JFrame {
         setLocationRelativeTo(null);
         setContentPane(mainPanel);
 
-
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-                userService.updateRecord(currentStudent.getSearchKey(), currentStudent);
+                saveAllData();
             }
         });
 
@@ -75,17 +73,21 @@ public class stdMainWindow extends JFrame {
     }
 
     private void loadCourses() {
+       
+        Student freshStudent = (Student) userService.getRecord(currentStudent.getSearchKey());
+        if (freshStudent != null) {
+            currentStudent = freshStudent;
+        }
+
         allCourses = courseService.returnAllRecords();
 
         availableCoursesModel.clear();
         enrolledCoursesModel.clear();
 
-
         List<Course> enrolledCourses = currentStudent.getEnrolledCourses(courseService);
 
         for (Course course : allCourses) {
             String courseDisplay = course.getTitle() + " (ID: " + course.getSearchKey() + ")";
-
 
             boolean isEnrolled = false;
             for (Course enrolledCourse : enrolledCourses) {
@@ -108,6 +110,24 @@ public class stdMainWindow extends JFrame {
         if (enrolledCoursesModel.isEmpty()) {
             enrolledCoursesModel.addElement("No enrolled courses yet.");
         }
+    }
+
+    private void onRefreshClicked() {
+        
+        saveAllData();
+
+        
+        courseService = new CourseService();
+        userService = new UserService();
+
+    
+        loadCourses();
+
+        
+        JOptionPane.showMessageDialog(this,
+                "Course lists have been refreshed successfully!",
+                "Refresh Complete",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void onEnrollClicked() {
@@ -151,14 +171,13 @@ public class stdMainWindow extends JFrame {
         }
 
         try {
-
+            
             currentStudent.enrollInCourse(courseService, courseId, currentStudent);
-
 
             course.addStudent(currentStudent);
             courseService.updateRecord(courseId, course);
 
-
+           
             userService.updateRecord(currentStudent.getSearchKey(), currentStudent);
 
             JOptionPane.showMessageDialog(this,
@@ -198,21 +217,24 @@ public class stdMainWindow extends JFrame {
             return;
         }
 
-
         new CourseDetailsWindow(course, currentStudent, courseService, userService);
     }
 
     private void onLogout() {
         int choice = JOptionPane.showConfirmDialog(this,
-                "Are you sure you want to logout?",
+                "Are you sure you want to logout?\nAll changes will be saved.",
                 "Confirm Logout",
-                JOptionPane.YES_NO_OPTION);
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
 
         if (choice == JOptionPane.YES_OPTION) {
+            
+            saveAllData();
 
-            userService.updateRecord(currentStudent.getSearchKey(), currentStudent);
-
+            
             dispose();
+
+           
             new login();
         }
     }
@@ -251,14 +273,14 @@ public class stdMainWindow extends JFrame {
         }
 
         try {
-
+            
             currentStudent.dropCourse(courseService, courseId, currentStudent);
 
-
+            
             course.removeStudent(currentStudent.getSearchKey());
             courseService.updateRecord(courseId, course);
 
-
+           
             userService.updateRecord(currentStudent.getSearchKey(), currentStudent);
 
             JOptionPane.showMessageDialog(this,
@@ -279,6 +301,17 @@ public class stdMainWindow extends JFrame {
         int startIndex = courseDisplay.indexOf("ID: ") + 4;
         int endIndex = courseDisplay.indexOf(")", startIndex);
         return courseDisplay.substring(startIndex, endIndex);
+    }
+
+    private void saveAllData() {
+        
+        userService.updateRecord(currentStudent.getSearchKey(), currentStudent);
+
+        
+        courseService.saveToFile();
+
+       
+        userService.saveToFile();
     }
 
     public JPanel getMainPanel() {

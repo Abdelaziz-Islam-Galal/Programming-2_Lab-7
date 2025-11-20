@@ -7,6 +7,7 @@ import Utilities.Validation;
 import Database.CourseService;
 import Database.UserService;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -21,15 +22,44 @@ public class Instructor extends User {
         courseService.insertRecord(newCourse);
     }
 
-    public void editCourseDetails(CourseService courseService, String courseId, String title, String description){
-        Course existingCourse = courseService.getRecord(courseId);
-        String key = existingCourse.getSearchKey();
+    public void editCourseDetails(CourseService courseService, UserService userService, String oldCourseId, String newCourseId, String title, String description){
+        Course existingCourse = courseService.getRecord(oldCourseId);
 
-        if(Validation.isValidString(courseId)) existingCourse.setCourseId(courseId);
+        if (existingCourse == null) {
+            throw new IllegalArgumentException("Course not found");
+        }
+
+        boolean courseIdChanged = !oldCourseId.equals(newCourseId) && Validation.isValidString(newCourseId);
+
+
+        if(courseIdChanged) {
+
+            if (courseService.contains(newCourseId)) {
+                throw new IllegalArgumentException("Course ID '" + newCourseId + "' already exists");
+            }
+            existingCourse.setCourseId(newCourseId);
+        }
         if (Validation.isValidString(title)) existingCourse.setTitle(title);
         if(Validation.isValidString(description)) existingCourse.setDescription(description);
 
-        courseService.updateRecord(key, existingCourse);
+
+        if (courseIdChanged) {
+            List<User> allUsers = userService.returnAllRecords();
+            for (User user : allUsers) {
+                if (user instanceof Student) {
+                    Student student = (Student) user;
+                    student.updateCourseId(oldCourseId, newCourseId);
+                    userService.updateRecord(student.getSearchKey(), student);
+                }
+            }
+
+
+            courseService.deleteRecord(oldCourseId);
+            courseService.insertRecord(existingCourse);
+        } else {
+
+            courseService.updateRecord(oldCourseId, existingCourse);
+        }
     }
 
     public void deleteCourse(CourseService courseService, String courseId){
@@ -43,6 +73,41 @@ public class Instructor extends User {
         existingCourse.addLesson(new Lesson(lessonID, title, content, resources));
         courseService.updateRecord(key, existingCourse);
     }
+
+    public void editLesson(CourseService courseService, UserService userService, String courseId, String oldLessonID, String newLessonID, String title, String content, List<String> resources){
+        Course existingCourse = courseService.getRecord(courseId);
+        String key = existingCourse.getSearchKey();
+
+        boolean lessonIdChanged = !oldLessonID.equals(newLessonID) && Validation.isValidString(newLessonID);
+
+
+        Lesson updatedLesson = new Lesson(
+                Validation.isValidString(newLessonID) ? newLessonID : oldLessonID,
+                title,
+                content,
+                resources
+        );
+
+
+        existingCourse.editLesson(oldLessonID, updatedLesson);
+
+
+        if (lessonIdChanged) {
+            List<User> allUsers = userService.returnAllRecords();
+            for (User user : allUsers) {
+                if (user instanceof Student) {
+                    Student student = (Student) user;
+
+                    student.updateLessonId(courseId, oldLessonID, newLessonID);
+
+                    userService.updateRecord(student.getSearchKey(), student);
+                }
+            }
+        }
+
+        courseService.updateRecord(key, existingCourse);
+    }
+
 
     public void editLesson(CourseService courseService, String courseId, String lessonID, String title, String content, List<String> resources){
         Course existingCourse = courseService.getRecord(courseId);
@@ -61,10 +126,34 @@ public class Instructor extends User {
         courseService.updateRecord(key, existingCourse);
     }
 
-    public List<Student> enrolledStudents(CourseService courseService, String courseId){
+    public List<Student> enrolledStudents(CourseService courseService, UserService userService, String courseId){
         Course existingCourse = courseService.getRecord(courseId);
-        List<Student> students = existingCourse.getStudents();
 
-        return Collections.unmodifiableList(students);
+        if (existingCourse == null) {
+            return Collections.emptyList();
+        }
+
+        List<Student> enrolledStudents = new ArrayList<>();
+        List<User> allUsers = userService.returnAllRecords();
+
+        for (User user : allUsers) {
+            if (user instanceof Student) {
+                Student student = (Student) user;
+
+                if (student.getProgress().containsKey(courseId)) {
+                    enrolledStudents.add(student);
+                }
+            }
+        }
+
+        existingCourse.getStudents().clear();
+
+        for (Student student : enrolledStudents) {
+            existingCourse.addStudent(student);
+        }
+
+        courseService.updateRecord(courseId, existingCourse);
+
+        return Collections.unmodifiableList(enrolledStudents);
     }
 }
